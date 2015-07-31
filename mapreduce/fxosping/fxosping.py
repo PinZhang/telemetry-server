@@ -1,7 +1,11 @@
 import json
 
 def map(key, dims, value, context):
+    # get info object
     data = json.loads(value)
+    if data.has_key('info'):
+        data = data.get('info')
+
     reason, appName, appUpdateChannel, appVersion, appBuildID, submission_date = dims
 
     def dataval(key):
@@ -10,6 +14,7 @@ def map(key, dims, value, context):
     def strval(d, key):
         if not d:
             return 'unknown'
+
         return d.get(key, 'unknown') or 'unknown'
 
     hours = -1
@@ -19,34 +24,36 @@ def map(key, dims, value, context):
         hours = float(int(data['pingTime']) - int(data['activationTime'])) / (60 * 60 * 1000)
         time_to_ping = '%d' % round(hours)
 
-    context.write(key, submission_date)
-    context.write(key, strval(data, 'deviceinfo.os'))
-    context.write(key, strval(data, 'deviceinfo.software'))
-    context.write(key, time_to_ping)
-    context.write(key, dataval('screenWidth'))
-    context.write(key, dataval('screenHeight'))
-    context.write(key, dataval('devicePixelRatio'))
-    context.write(key, strval(data, 'locale'))
-    context.write(key, strval(data, 'deviceinfo.hardware'))
-    context.write(key, strval(data, 'deviceinfo.product_model'))
-    context.write(key, strval(data, 'deviceinfo.firmware_revision'))
-    context.write(key, appUpdateChannel)
+    result = []
+    result.append(submission_date)
+    result.append(strval(data, 'deviceinfo.os'))
+    result.append(strval(data, 'deviceinfo.software'))
+    result.append(time_to_ping)
+    result.append(dataval('screenWidth'))
+    result.append(dataval('screenHeight'))
+    result.append(dataval('devicePixelRatio'))
+    result.append(strval(data, 'locale'))
+    result.append(strval(data, 'deviceinfo.hardware'))
+    result.append(strval(data, 'deviceinfo.product_model'))
+    result.append(strval(data, 'deviceinfo.firmware_revision'))
+    result.append(appUpdateChannel)
 
     icc = data.get('icc')
-    context.write(key, strval(icc, 'mnc'))
-    context.write(key, strval(icc, 'mcc'))
-    context.write(key, strval(icc, 'spn'))
+    result.append(strval(icc, 'mnc'))
+    result.append(strval(icc, 'mcc'))
+    result.append(strval(icc, 'spn'))
 
     network = data.get('network')
-    context.write(key, strval(network, 'mnc'))
-    context.write(key, strval(network, 'mcc'))
-    context.write(key, strval(network, 'operator'))
+    result.append(strval(network, 'mnc'))
+    result.append(strval(network, 'mcc'))
+    result.append(strval(network, 'operator'))
 
-    info = data.get('info')
-    context.write(key, strval(info, 'geoCountry'))
+    result.append(strval(data, 'geoCountry'))
+    context.write(key, result)
 
 def setup_reduce(context):
     context.field_separator = ','
 
 def reduce(key, values, context):
-    context.writecsv(values)
+    for v in values:
+        context.writecsv(v)
