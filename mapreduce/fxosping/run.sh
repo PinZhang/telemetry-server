@@ -54,6 +54,7 @@ python -m mapreduce.job "$THIS_DIR/fxosping.py" \
    --input-filter "$THIS_DIR/filter.json" \
    --num-mappers 16 \
    --num-reducers 4 \
+   -l \
    --data-dir "$BASE/data" \
    --work-dir "$BASE/work" \
    --output "$TMP_OUTPUT_FILE" \
